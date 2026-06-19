@@ -1,0 +1,61 @@
+split,metric,model_key,model_name,value,rank
+random,balanced_accuracy,gnn,Molecular Graph GNN,0.9588017726070376,1.0
+random,balanced_accuracy,smiles,SMILES CNN-BiGRU,0.954519689908278,3.0
+random,balanced_accuracy,rf,Morgan RF,0.9539832129075106,4.0
+random,balanced_accuracy,rf,Morgan RF,0.9555880635298698,4.0
+random,balanced_accuracy,mlp,Morgan MLP,0.9513099886635596,5.0
+random,balanced_accuracy,chemberta,ChemBERTa-10M,0.9106207559917094,6.0
+random,brier_score,gnn,Molecular Graph GNN,0.0314404664124324,1.0
+random,brier_score,smiles,SMILES CNN-BiGRU,0.0374599981639616,2.0
+random,brier_score,mlp,Morgan MLP,0.0387197385324412,3.0
+random,brier_score,rf,Morgan RF,0.0561079763015303,4.0
+random,brier_score,rf,Morgan RF,0.0575345136603062,4.0
+random,brier_score,chemberta,ChemBERTa-10M,0.0719113434561312,6.0
+random,mcc,gnn,Molecular Graph GNN,0.9176035452140756,1.0
+random,mcc,smiles,SMILES CNN-BiGRU,0.909054994265391,3.0
+random,mcc,rf,Morgan RF,0.908023615146846,4.0
+random,mcc,rf,Morgan RF,0.9112449981595012,4.0
+random,mcc,mlp,Morgan MLP,0.9026261789046915,5.0
+random,mcc,chemberta,ChemBERTa-10M,0.8253831188501869,6.0
+random,pr_auc,gnn,Molecular Graph GNN,0.9932849366760096,1.0
+random,pr_auc,rf,Morgan RF,0.9912168427621464,2.0
+random,pr_auc,rf,Morgan RF,0.9881917676245217,2.0
+random,pr_auc,smiles,SMILES CNN-BiGRU,0.988504524892148,3.0
+random,pr_auc,mlp,Morgan MLP,0.9882459836822032,4.0
+random,pr_auc,chemberta,ChemBERTa-10M,0.970592849117987,6.0
+random,roc_auc,gnn,Molecular Graph GNN,0.9924034398653366,1.0
+random,roc_auc,rf,Morgan RF,0.99013386160382,2.0
+random,roc_auc,rf,Morgan RF,0.988531873718925,2.0
+random,roc_auc,mlp,Morgan MLP,0.9874772412371606,4.0
+random,roc_auc,smiles,SMILES CNN-BiGRU,0.987228755625279,5.0
+random,roc_auc,chemberta,ChemBERTa-10M,0.9686106562539364,6.0
+scaffold,balanced_accuracy,gnn,Molecular Graph GNN,0.940627970090119,1.0
+scaffold,balanced_accuracy,smiles,SMILES CNN-BiGRU,0.9192187016913052,2.0
+scaffold,balanced_accuracy,mlp,Morgan MLP,0.905849717734086,3.0
+scaffold,balanced_accuracy,rf,Morgan RF,0.8924927572742158,4.0
+scaffold,balanced_accuracy,rf,Morgan RF,0.8973027287613508,4.0
+scaffold,balanced_accuracy,chemberta,ChemBERTa-10M,0.8513054082836171,6.0
+scaffold,brier_score,gnn,Molecular Graph GNN,0.0502936841295027,1.0
+scaffold,brier_score,smiles,SMILES CNN-BiGRU,0.0680255711636319,2.0
+scaffold,brier_score,mlp,Morgan MLP,0.0794626605782196,3.0
+scaffold,brier_score,rf,Morgan RF,0.0860074821572679,4.0
+scaffold,brier_score,rf,Morgan RF,0.0828851902827629,4.0
+scaffold,brier_score,chemberta,ChemBERTa-10M,0.1130794960175333,6.0
+scaffold,mcc,gnn,Molecular Graph GNN,0.8832333909207166,1.0
+scaffold,mcc,smiles,SMILES CNN-BiGRU,0.8390775560289183,2.0
+scaffold,mcc,mlp,Morgan MLP,0.8134627984065836,3.0
+scaffold,mcc,rf,Morgan RF,0.7925136171615765,4.0
+scaffold,mcc,rf,Morgan RF,0.8001171208310907,4.0
+scaffold,mcc,chemberta,ChemBERTa-10M,0.7141765659318263,6.0
+scaffold,pr_auc,gnn,Molecular Graph GNN,0.9834589356050324,1.0
+scaffold,pr_auc,rf,Morgan RF,0.9753344741439794,2.0
+scaffold,pr_auc,rf,Morgan RF,0.975528498380908,2.0
+scaffold,pr_auc,smiles,SMILES CNN-BiGRU,0.975438560138236,3.0
+scaffold,pr_auc,mlp,Morgan MLP,0.9728841314797588,5.0
+scaffold,pr_auc,chemberta,ChemBERTa-10M,0.9521153891388644,6.0
+scaffold,roc_auc,gnn,Molecular Graph GNN,0.980063896300198,1.0
+scaffold,roc_auc,smiles,SMILES CNN-BiGRU,0.9738620618580311,2.0
+scaffold,roc_auc,rf,Morgan RF,0.972751319721971,3.0
+scaffold,roc_auc,rf,Morgan RF,0.9734486825682188,3.0
+scaffold,roc_auc,mlp,Morgan MLP,0.969021745353777,5.0
+scaffold,roc_auc,chemberta,ChemBERTa-10M,0.9517960814849592,6.0

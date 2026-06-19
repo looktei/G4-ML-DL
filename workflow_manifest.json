@@ -1,0 +1,175 @@
+{
+  "steps": [
+    {
+      "wrapper": "00_check_environment.py",
+      "original_script": "01_check_environment.py",
+      "title": "Check Python/RDKit/ML/deep-learning environment",
+      "seed_mode": "env"
+    },
+    {
+      "wrapper": "01_fetch_g4ldb.py",
+      "original_script": "02_fetch_g4ldb.py",
+      "title": "Fetch G4LDB ligand metadata/activity records",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "02_preprocess_g4ldb_ml_ready.py",
+      "original_script": "03_preprocess_g4ldb_ml_ready.py",
+      "title": "Preprocess G4LDB positives into ML-ready table",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "03_prepare_chembl_negative_decoys.py",
+      "original_script": "04_prepare_chembl_negative_decoys.py",
+      "title": "Prepare ChEMBL assumed-negative decoys and combined binary dataset",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "04_visualize_binary_dataset.py",
+      "original_script": "05_visualize_binary_dataset.py",
+      "title": "Visualize/validate binary G4LDB vs ChEMBL dataset",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "05_plot_physicochemical_boxplots.py",
+      "original_script": "06_plot_physicochemical_boxplots.py",
+      "title": "Generate physicochemical boxplots/statistics",
+      "seed_mode": "single"
+    },
+    {
+      "wrapper": "06_train_baseline_g4_classifier.py",
+      "original_script": "07_train_baseline_g4_classifier.py",
+      "title": "Train classical ML baseline models",
+      "seed_mode": "single"
+    },
+    {
+      "wrapper": "07_validate_baseline_g4_classifier.py",
+      "original_script": "08_validate_baseline_g4_classifier.py",
+      "title": "Validate Morgan RF classical baseline with random/scaffold repeated splits",
+      "seed_mode": "repeated"
+    },
+    {
+      "wrapper": "08_train_mlp_morgan_g4_classifier.py",
+      "original_script": "09_train_mlp_morgan_g4_classifier.py",
+      "title": "Train Morgan-fingerprint MLP deep-learning baseline",
+      "seed_mode": "repeated"
+    },
+    {
+      "wrapper": "09_train_smiles_sequence_g4_classifier.py",
+      "original_script": "10_train_smiles_sequence_g4_classifier.py",
+      "title": "Train SMILES CNN-BiGRU sequence model",
+      "seed_mode": "repeated"
+    },
+    {
+      "wrapper": "10_train_chemberta_g4_classifier.py",
+      "original_script": "11_train_chemberta_g4_classifier.py",
+      "title": "Fine-tune ChemBERTa chemical language model",
+      "seed_mode": "repeated"
+    },
+    {
+      "wrapper": "11_train_gnn_molecular_graph_g4_classifier.py",
+      "original_script": "12_train_gnn_molecular_graph_g4_classifier.py",
+      "title": "Train molecular graph GNN model",
+      "seed_mode": "repeated"
+    },
+    {
+      "wrapper": "12_build_final_model_comparison_table.py",
+      "original_script": "13_build_final_model_comparison_table.py",
+      "title": "Build final model-comparison tables/figures",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "13_make_research_summary_figures.py",
+      "original_script": "14_make_research_summary_figures.py",
+      "title": "Create research-summary workflow/overview figures",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "14_make_q1_key_result_figure.py",
+      "original_script": "15_make_q1_key_result_figure.py",
+      "title": "Create Q1-style key-result figure",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "15_make_q1_workflow_figure.py",
+      "original_script": "16_make_q1_workflow_figure.py",
+      "title": "Create Q1-style workflow figure",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "16_prepare_bindingdb_kd_release.py",
+      "original_script": "17_prepare_bindingdb_kd_release.py",
+      "title": "Prepare slim BindingDB Kd-only external-validation file",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "17_validate_bindingdb_kd_gnn_external.py",
+      "original_script": "18_validate_bindingdb_kd_gnn_external.py",
+      "title": "Run BindingDB Kd-only locked-GNN external validation",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "18_validate_bindingdb_g4_known_inhibitors.py",
+      "original_script": "19_validate_bindingdb_g4_known_inhibitors.py",
+      "title": "Run BindingDB known-G4 positive-control validation",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "19_run_bindingdb_supplementary_positive_control.py",
+      "original_script": "20_run_bindingdb_supplementary_positive_control.py",
+      "title": "Build supplementary BindingDB positive-control support analysis",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "20_collect_pubchem_g4_bioassay_aids.py",
+      "original_script": "21_collect_pubchem_g4_bioassay_aids.py",
+      "title": "Collect candidate PubChem G4 BioAssay AIDs",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "21_collect_pubchem_g4_compound_level_records.py",
+      "original_script": "22_collect_pubchem_g4_compound_level_records.py",
+      "title": "Collect PubChem compound-level G4 assay records",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "22_collect_pubchem_g4_expanded_external_evidence_set.py",
+      "original_script": "23_collect_pubchem_g4_expanded_external_evidence_set.py",
+      "title": "Build expanded PubChem G4 evidence set",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "23_validate_pubchem_g4_expanded_locked_gnn.py",
+      "original_script": "24_validate_pubchem_g4_expanded_locked_gnn.py",
+      "title": "Run locked GNN on expanded PubChem G4 evidence set",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "24_analyze_pubchem_g4_locked_gnn_imbalance.py",
+      "original_script": "25_analyze_pubchem_g4_locked_gnn_imbalance.py",
+      "title": "Run imbalance-aware PubChem locked-GNN analysis",
+      "seed_mode": "single"
+    },
+    {
+      "wrapper": "25_make_integrated_workflow_figure.py",
+      "original_script": "26_make_integrated_workflow_figure.py",
+      "title": "Create integrated workflow figure",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "26_build_master_report_html.py",
+      "original_script": "27_build_master_report_html.py",
+      "title": "Build standalone master HTML report",
+      "seed_mode": "none"
+    },
+    {
+      "wrapper": "27_build_reproducibility_workflow_html.py",
+      "original_script": "28_build_reproducibility_workflow_html.py",
+      "title": "Build original full reproducibility-workflow HTML report",
+      "seed_mode": "none"
+    }
+  ],
+  "version": "revised_reproduce_workflow_v.4",
+  "standalone": true,
+  "notes": "Top-level scripts embed their source and do not require a reproduce_workflow_scripts folder."
+}

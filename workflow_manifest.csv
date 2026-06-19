@@ -1,0 +1,29 @@
+wrapper,embedded_source,title,seed_mode,standalone
+00_check_environment.py,01_check_environment.py,Check Python/RDKit/ML/deep-learning environment,env,yes
+01_fetch_g4ldb.py,02_fetch_g4ldb.py,Fetch G4LDB ligand metadata/activity records,none,yes
+02_preprocess_g4ldb_ml_ready.py,03_preprocess_g4ldb_ml_ready.py,Preprocess G4LDB positives into ML-ready table,none,yes
+03_prepare_chembl_negative_decoys.py,04_prepare_chembl_negative_decoys.py,Prepare ChEMBL assumed-negative decoys and combined binary dataset,none,yes
+04_visualize_binary_dataset.py,05_visualize_binary_dataset.py,Visualize/validate binary G4LDB vs ChEMBL dataset,none,yes
+05_plot_physicochemical_boxplots.py,06_plot_physicochemical_boxplots.py,Generate physicochemical boxplots/statistics,single,yes
+06_train_baseline_g4_classifier.py,07_train_baseline_g4_classifier.py,Train classical ML baseline models,single,yes
+07_validate_baseline_g4_classifier.py,08_validate_baseline_g4_classifier.py,Validate Morgan RF classical baseline with random/scaffold repeated splits,repeated,yes
+08_train_mlp_morgan_g4_classifier.py,09_train_mlp_morgan_g4_classifier.py,Train Morgan-fingerprint MLP deep-learning baseline,repeated,yes
+09_train_smiles_sequence_g4_classifier.py,10_train_smiles_sequence_g4_classifier.py,Train SMILES CNN-BiGRU sequence model,repeated,yes
+10_train_chemberta_g4_classifier.py,11_train_chemberta_g4_classifier.py,Fine-tune ChemBERTa chemical language model,repeated,yes
+11_train_gnn_molecular_graph_g4_classifier.py,12_train_gnn_molecular_graph_g4_classifier.py,Train molecular graph GNN model,repeated,yes
+12_build_final_model_comparison_table.py,13_build_final_model_comparison_table.py,Build final model-comparison tables/figures,none,yes
+13_make_research_summary_figures.py,14_make_research_summary_figures.py,Create research-summary workflow/overview figures,none,yes
+14_make_q1_key_result_figure.py,15_make_q1_key_result_figure.py,Create Q1-style key-result figure,none,yes
+15_make_q1_workflow_figure.py,16_make_q1_workflow_figure.py,Create Q1-style workflow figure,none,yes
+16_prepare_bindingdb_kd_release.py,17_prepare_bindingdb_kd_release.py,Prepare slim BindingDB Kd-only external-validation file,none,yes
+17_validate_bindingdb_kd_gnn_external.py,18_validate_bindingdb_kd_gnn_external.py,Run BindingDB Kd-only locked-GNN external validation,none,yes
+18_validate_bindingdb_g4_known_inhibitors.py,19_validate_bindingdb_g4_known_inhibitors.py,Run BindingDB known-G4 positive-control validation,none,yes
+19_run_bindingdb_supplementary_positive_control.py,20_run_bindingdb_supplementary_positive_control.py,Build supplementary BindingDB positive-control support analysis,none,yes
+20_collect_pubchem_g4_bioassay_aids.py,21_collect_pubchem_g4_bioassay_aids.py,Collect candidate PubChem G4 BioAssay AIDs,none,yes
+21_collect_pubchem_g4_compound_level_records.py,22_collect_pubchem_g4_compound_level_records.py,Collect PubChem compound-level G4 assay records,none,yes
+22_collect_pubchem_g4_expanded_external_evidence_set.py,23_collect_pubchem_g4_expanded_external_evidence_set.py,Build expanded PubChem G4 evidence set,none,yes
+23_validate_pubchem_g4_expanded_locked_gnn.py,24_validate_pubchem_g4_expanded_locked_gnn.py,Run locked GNN on expanded PubChem G4 evidence set,none,yes
+24_analyze_pubchem_g4_locked_gnn_imbalance.py,25_analyze_pubchem_g4_locked_gnn_imbalance.py,Run imbalance-aware PubChem locked-GNN analysis,single,yes
+25_make_integrated_workflow_figure.py,26_make_integrated_workflow_figure.py,Create integrated workflow figure,none,yes
+26_build_master_report_html.py,27_build_master_report_html.py,Build standalone master HTML report,none,yes
+27_build_reproducibility_workflow_html.py,28_build_reproducibility_workflow_html.py,Build original full reproducibility-workflow HTML report,none,yes

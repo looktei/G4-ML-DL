@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-06-09T09:55:26+00:00",
+  "note": "ChEMBL decoys are assumed negatives only; absence of G4 activity evidence is not evidence of inactivity.",
+  "positive": {
+    "positive_input": "data/g4ldb/g4ldb_g4_ligand_ml_preprocessed.csv",
+    "positive_input_rows": 4672,
+    "positive_valid_rdkit_rows": 4672,
+    "positive_unique_canonical_smiles": 4672,
+    "positive_invalid_for_matching": 0
+  },
+  "fetch": {
+    "chembl_api_url": "https://www.ebi.ac.uk/chembl/api/data/molecule.json",
+    "fetched_pages": 40,
+    "raw_records_seen": 40000,
+    "clean_unique_candidates": 37976,
+    "candidate_removals": {
+      "duplicate_canonical_smiles": 1,
+      "missing_smiles": 195,
+      "mixture_or_salt": 1757,
+      "overlaps_positive": 62,
+      "unusual_element": 9
+    },
+    "fetch_stop_reason": "min_clean_candidates_reached",
+    "min_clean_candidates": 37376
+  },
+  "similarity_filter": {
+    "method": "Morgan fingerprint Tanimoto similarity against all G4LDB positives.",
+    "threshold": 0.7,
+    "fingerprint_radius": 2,
+    "fingerprint_size": 2048,
+    "positive_fingerprints": 4672,
+    "input_candidates": 37976,
+    "kept_candidates": 37752,
+    "removed_candidates": 224,
+    "invalid_for_similarity": 0,
+    "removed_similarity_summary": {
+      "min": 0.7,
+      "median": 0.775255,
+      "max": 1.0
+    },
+    "kept_similarity_summary": {
+      "min": 0.085714,
+      "median": 0.276923,
+      "max": 0.69863
+    }
+  },
+  "selection": {
+    "target_decoy_count": 4672,
+    "selected_decoy_count": 4672,
+    "selection_counts": {
+      "full_mw_logp_hbd_hba_bin": 3400,
+      "mw_logp_bin_backfill": 872,
+      "nearest_property_backfill": 400
+    }
+  },
+  "distribution_summary": {
+    "rdkit_mw": {
+      "positive_mean": 581.1923,
+      "decoy_mean": 521.5619,
+      "mean_difference_decoy_minus_positive": -59.6304,
+      "positive_median": 520.586,
+      "decoy_median": 500.629
+    },
+    "rdkit_alogp": {
+      "positive_mean": 4.5008,
+      "decoy_mean": 4.2418,
+      "mean_difference_decoy_minus_positive": -0.259,
+      "positive_median": 4.2685,
+      "decoy_median": 4.2087
+    },
+    "rdkit_hbd": {
+      "positive_mean": 2.1999,
+      "decoy_mean": 2.1312,
+      "mean_difference_decoy_minus_positive": -0.0687,
+      "positive_median": 2.0,
+      "decoy_median": 2.0
+    },
+    "rdkit_hba": {
+      "positive_mean": 6.3816,
+      "decoy_mean": 6.1134,
+      "mean_difference_decoy_minus_positive": -0.2682,
+      "positive_median": 6.0,
+      "decoy_median": 6.0
+    },
+    "rdkit_tpsa": {
+      "positive_mean": 100.7888,
+      "decoy_mean": 106.3526,
+      "mean_difference_decoy_minus_positive": 5.5638,
+      "positive_median": 81.24,
+      "decoy_median": 95.4
+    }
+  },
+  "validation": {
+    "negative_rows": 4672,
+    "combined_rows": 9344,
+    "combined_label_counts": {
+      "0": 4672,
+      "1": 4672
+    },
+    "negative_duplicate_canonical_smiles": 0,
+    "combined_duplicate_canonical_smiles": 0,
+    "positive_negative_overlap": 0,
+    "negative_missing_core_fields": {
+      "source": 0,
+      "compound_id": 0,
+      "name": 0,
+      "smiles": 0,
+      "canonical_smiles": 0,
+      "label": 0,
+      "assay_note": 0,
+      "rdkit_formula": 0,
+      "rdkit_mw": 0,
+      "rdkit_hbd": 0,
+      "rdkit_hba": 0,
+      "rdkit_alogp": 0,
+      "rdkit_tpsa": 0
+    }
+  },
+  "matching_strategy": {
+    "primary": "Exact bins on MW width 50 Da, LogP width 1, HBD capped at 5+, and HBA grouped as 0-2/3-5/6-8/9-12/13+.",
+    "backfill": "Then MW+LogP bins, then nearest available MW/LogP bin when exact bins are underfilled.",
+    "positive_similarity_filter": "Before sampling, remove ChEMBL candidates with Morgan fingerprint Tanimoto similarity >= 0.7 to any G4LDB positive.",
+    "random_seed": 20260601
+  },
+  "outputs": {
+    "decoy_core": "data/chembl/chembl_negative_decoys.csv",
+    "decoy_metadata": "data/chembl/chembl_negative_decoys_with_metadata.csv",
+    "similarity_filtered_candidates": "data/chembl/chembl_negative_decoys_removed_similar_to_g4ldb.csv",
+    "report": "data/chembl/chembl_negative_decoy_report.json",
+    "combined_dataset": "data/modeling/g4ldb_chembl_binary_dataset.csv",
+    "summary": "data/chembl/chembl_negative_decoy_summary.md"
+  }
+}

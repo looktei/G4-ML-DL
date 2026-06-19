@@ -1,0 +1,25 @@
+{
+  "generated": "2026-06-12T00:56:25",
+  "dataset": "/home/looktei/Desktop/test1/script/data/modeling/g4ldb_chembl_binary_dataset.csv",
+  "output_dir": "/home/looktei/Desktop/test1/script/data/modeling/deep_learning_mlp",
+  "rows": 9344,
+  "positives": 4672,
+  "negatives": 4672,
+  "fingerprint_radius": 2,
+  "fingerprint_bits": 2048,
+  "hidden_dims": [
+    512,
+    256
+  ],
+  "dropout": 0.25,
+  "batch_size": 256,
+  "epochs": 80,
+  "patience": 12,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0001,
+  "device": "cuda",
+  "torch_version": "2.4.1",
+  "cuda_available": true,
+  "cuda_device": "NVIDIA GeForce GTX 1080 Ti",
+  "elapsed_seconds": 67.50078225135803
+}

@@ -1,0 +1,39 @@
+{
+  "generated": "2026-06-12T15:31:31",
+  "dataset": "/home/looktei/Desktop/test1/script/data/modeling/g4ldb_chembl_binary_dataset.csv",
+  "output_dir": "/home/looktei/Desktop/test1/script/data/modeling/deep_learning_gnn",
+  "rows": 9344,
+  "positives": 4672,
+  "negatives": 4672,
+  "atom_feature_dims": [
+    119,
+    8,
+    7,
+    6,
+    8,
+    6,
+    2,
+    2
+  ],
+  "bond_feature_dims": [
+    5,
+    2,
+    2,
+    7
+  ],
+  "hidden_dim": 128,
+  "layers": 4,
+  "dense_hidden": 256,
+  "dropout": 0.2,
+  "batch_size": 128,
+  "epochs": 60,
+  "patience": 10,
+  "learning_rate": 0.0008,
+  "weight_decay": 1e-05,
+  "device": "cuda",
+  "torch_version": "2.4.1",
+  "torch_geometric_version": "2.6.1",
+  "cuda_available": true,
+  "cuda_device": "NVIDIA GeForce GTX 1080 Ti",
+  "elapsed_seconds": 1873.992380142212
+}

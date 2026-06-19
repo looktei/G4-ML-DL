@@ -1,0 +1,735 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Handout: Step-by-step Nipah G4 Reproducible Workflow v.2</title>
+<style>
+:root { --ink:#172033; --muted:#596579; --line:#d8dee9; --soft:#f6f8fb; --blue:#2563eb; --green:#059669; --amber:#d97706; --red:#dc2626; }
+* { box-sizing: border-box; }
+body { margin:0; font-family: "Noto Sans Thai", "Segoe UI", Arial, sans-serif; color:var(--ink); line-height:1.65; background:white; }
+header { background:linear-gradient(135deg,#0f172a,#1e3a8a); color:white; padding:2.2rem 2rem; }
+header h1 { margin:0 0 .5rem; font-size:2rem; }
+header p { margin:.25rem 0; opacity:.95; }
+main { max-width:1100px; margin:auto; padding:1.5rem; }
+nav { background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:1rem; margin:1rem 0 1.5rem; }
+nav a { display:inline-block; margin:.25rem .45rem .25rem 0; padding:.25rem .55rem; background:white; border:1px solid #c7d2fe; border-radius:999px; color:#1e40af; text-decoration:none; font-size:.93rem; }
+h2 { border-bottom:2px solid var(--line); padding-bottom:.35rem; margin-top:2rem; }
+h3 { margin:.2rem 0; }
+h4 { margin:1rem 0 .35rem; color:#334155; }
+.card, .step { border:1px solid var(--line); border-radius:14px; padding:1rem 1.1rem; margin:1rem 0; background:white; box-shadow:0 2px 10px rgba(15,23,42,.04); }
+.card.tip { background:#ecfdf5; border-color:#a7f3d0; }
+.card.warn { background:#fff7ed; border-color:#fed7aa; }
+.card.danger { background:#fef2f2; border-color:#fecaca; }
+.grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.8rem; }
+.grid div { background:var(--soft); border:1px solid #e5e7eb; border-radius:10px; padding:.75rem; }
+.grid p { margin:.3rem 0 0; }
+pre { position:relative; background:#0b1020; color:#e5e7eb; padding:1rem; border-radius:12px; overflow-x:auto; white-space:pre-wrap; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }np
+p code, li code { background:#eef2f7; color:#111827; padding:.12rem .35rem; border-radius:5px; }
+.copy { position:absolute; right:.55rem; top:.55rem; border:0; border-radius:7px; background:#334155; color:white; padding:.25rem .55rem; cursor:pointer; }
+.badge { display:inline-block; background:var(--blue); color:white; border-radius:999px; padding:.15rem .55rem; font-size:.82rem; font-weight:700; }
+.step-head { display:flex; align-items:center; gap:.65rem; }
+.subtitle { color:var(--muted); margin-top:.2rem; }
+.checklist li { margin:.35rem 0; }
+.kbd { border:1px solid #cbd5e1; border-bottom-width:2px; border-radius:6px; padding:.05rem .35rem; background:#f8fafc; }
+footer { margin-top:2rem; padding:1.5rem; background:#f8fafc; color:#475569; border-top:1px solid var(--line); }
+@media print { .copy, nav { display:none; } body { font-size:11pt; } .step { page-break-inside:avoid; } pre { white-space:pre-wrap; } }
+@media (max-width:800px) { .grid { grid-template-columns:1fr; } main { padding:.8rem; } }
+</style>
+<script>
+function copyCode(btn) {
+  const code = btn.parentElement.querySelector('code').innerText;
+  navigator.clipboard.writeText(code).then(() => { btn.innerText='copied'; setTimeout(()=>btn.innerText='copy',1200); });
+}
+</script>
+</head>
+<body>
+<header>
+  <h1>คู่มือ/Handout: Nipah G4 Reproducible Workflow v.2</h1>
+  <p>คู่มือกดรันทีละขั้นสำหรับ reproduce โปรเจกต์ G4-ligand classifier ตั้งแต่ data acquisition → preprocessing → classical ML → deep learning → external validation → final reports</p>
+  <p><strong>Generated:</strong> 2026-06-07T02:23:03</p>
+  <p><strong>Workflow folder:</strong> <code>standalone: cd to this folder (no original-script folder required)</code></p>
+</header>
+<main>
+<section id="standalone-v4">
+<h2>Standalone execution & live logging in v.4</h2>
+<p><strong>v.4 แก้ปัญหา dependency ต่อ folder original script โดยตรง:</strong> ทุกไฟล์ <code>00_*.py</code> ถึง <code>27_*.py</code> เป็น standalone script ที่ embed source ของขั้นนั้นไว้ในตัวเอง</p>
+<ul>
+<li>ไม่ต้อง copy <code>reproduce_workflow_scripts/</code></li>
+<li>ทุกครั้งที่รัน จะ print <code>[START]</code> ทันที</li>
+<li>ระหว่างรัน จะ mirror output ของ script ขึ้นหน้าจอทันทีและเก็บลง log พร้อมกัน</li>
+<li>ถ้า step เงียบนาน จะมี heartbeat <code>[RUNNING] ... elapsed=...</code> ทุก 30 วินาที โดยปรับได้ด้วย <code>--progress-interval</code></li>
+<li>เมื่อจบ จะ print <code>[DONE]</code> พร้อม result/return code และ path ของ status file</li>
+<li>ยังเก็บ <code>.stdout.log</code>, <code>.stderr.log</code>, <code>.status.json</code>, <code>.status.md</code> ใน <code>logs/</code> เสมอ</li>
+</ul>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>cd /path/to/revised_reproduce_workflow_v.4
+python 00_check_environment.py --dry-run
+python 00_check_environment.py
+
+# ตัวอย่างลด interval heartbeat เป็นทุก 10 วินาที
+python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --seeds 0-19 --progress-interval 10</code></pre>
+</section>
+
+<section id="portable-v3">
+<h2>Standalone script fix in v.4</h2>
+<p><strong>v.4 ไม่ต้องใช้ folder <code>reproduce_workflow_scripts/</code> แล้ว</strong> ให้ copy ทั้งโฟลเดอร์ <code>revised_reproduce_workflow_v.4</code> ไปไว้ที่ใดก็ได้ แล้ว <code>cd</code> เข้าโฟลเดอร์นั้นก่อนรัน</p>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>cd /path/to/revised_reproduce_workflow_v.4
+python 00_check_environment.py --dry-run
+python 00_check_environment.py</code></pre>
+<p>แต่ละ top-level script ฝัง embedded source ไว้ในตัวเอง จึงไม่ต้องมี <code>reproduce_workflow_scripts/</code>; output/log จะอยู่ใน workflow folder โดย default และทุก run จะแสดง <code>[START]</code>, <code>[RUNNING]</code>, <code>[DONE]</code> พร้อมเก็บ log files</p>
+</section>
+
+<nav><strong>Phase navigation:</strong><br><a href="#A-Environment-setup">A. Environment setup</a><a href="#B-Data-acquisition">B. Data acquisition</a><a href="#C-Data-preprocessing">C. Data preprocessing</a><a href="#D-Dataset-QC-figures">D. Dataset QC figures</a><a href="#E-Classical-ML-baseline">E. Classical ML baseline</a><a href="#F-Deep-learning-models">F. Deep learning models</a><a href="#G-Model-comparison">G. Model comparison</a><a href="#H-Figures/reporting">H. Figures/reporting</a><a href="#I-BindingDB-external-validation">I. BindingDB external validation</a><a href="#J-PubChem-external-validation">J. PubChem external validation</a><a href="#K-Final-reports">K. Final reports</a></nav>
+
+<section class="card tip">
+<h2>เริ่มต้นเร็วที่สุด: 5 คำสั่งหลัก</h2>
+<p>ใช้ชุดคำสั่งนี้เมื่อย้ายโปรเจกต์ไปคอมเครื่องอื่นหรือเริ่มตรวจสอบ workflow ใหม่</p>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>cd /path/to/revised_reproduce_workflow_v.4
+
+# 1) ดูว่าคำสั่งแต่ละขั้นจะรันอะไรบ้าง โดยยังไม่ execute จริง
+./99_run_all_revised_workflow.sh --dry-run --seed 42 --seeds 0-19
+
+# 2) รัน environment check ก่อน
+python 00_check_environment.py
+
+# 3) ถ้าต้องการ reproduce เต็ม workflow ด้วย primary seed 42 และ repeated seeds 0-19
+./99_run_all_revised_workflow.sh --seed 42 --seeds 0-19
+
+# 4) ถ้าต้องการทดสอบเร็ว ใช้ repeated seeds แค่ 0-2
+./99_run_all_revised_workflow.sh --seed 42 --seeds 0-2
+
+# 5) ตรวจ log/status หลังรัน
+ls -lh logs/*.status.md | tail</code></pre>
+</section>
+
+<section class="card">
+<h2>ติดตั้ง environment ด้วย YAML</h2>
+<p>ไฟล์ dependency อยู่ที่ <code>environment.revised_reproduce_workflow_v4.yaml</code></p>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>cd /path/to/revised_reproduce_workflow_v.4
+micromamba env create -f environment.revised_reproduce_workflow_v4.yaml
+micromamba activate nipah-g4-reproducible
+python 00_check_environment.py</code></pre>
+<p><strong>หมายเหตุ:</strong> ถ้าใช้เครื่องอื่นที่ CUDA/PyTorch version ต่างกัน ให้ปรับ PyTorch/PyG ตาม CUDA ของเครื่องนั้น แล้วรัน <code>python 00_check_environment.py</code> ซ้ำ</p>
+</section>
+
+<section class="card warn">
+<h2>หลักการใช้ seed ใน handout นี้</h2>
+<ul>
+<li><code>--seed 42</code>: ใช้เป็น single seed และใช้เป็น primary seed สำหรับ repeated-seed steps ถ้าไม่ได้ระบุ <code>--primary-seed</code></li>
+<li><code>--seeds 0-19</code>: ใช้กับ repeated random/scaffold split steps เช่น classical validation, MLP, SMILES, ChemBERTa, GNN</li>
+<li><code>--n-seeds 20</code>: shortcut เทียบเท่า repeated seeds 0 ถึง 19</li>
+<li>ไม่ได้ hard-code N=20 ใน script; ปรับเป็น N=5, 10, 50 ได้ตามงาน</li>
+</ul>
+</section>
+
+<section class="card danger">
+<h2>ข้อควรระวังก่อนรันจริง</h2>
+<ul class="checklist">
+<li>บาง original scripts จะเขียน output ไปที่ default folder เช่น <code>data/modeling/</code> และอาจ overwrite ผลเดิม</li>
+<li>ถ้าต้องการ sandbox run ให้ใช้ <code>--extra-args "--output-dir ..."</code> เฉพาะ step ที่ original script รองรับ</li>
+<li>ขั้น BindingDB/PubChem อาจต้องใช้ไฟล์ external release หรือ internet access และใช้เวลานาน</li>
+<li>สำหรับการตีพิมพ์ ให้เก็บ <code>logs/*.status.json</code> และ <code>logs/*.status.md</code> เป็น audit trail</li>
+</ul>
+</section>
+
+<section class="phase" id="A-Environment-setup"><h2>A. Environment setup</h2>
+<article class="step" id="step-00">
+  <div class="step-head"><span class="badge">Step 00</span><h3>00_check_environment.py</h3></div>
+  <p class="subtitle">Check Python/RDKit/ML/deep-learning environment</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ตรวจว่า Python environment มี package สำคัญครบ เช่น RDKit, scikit-learn, PyTorch, transformers และ PyTorch Geometric ก่อนเริ่ม workflow</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>รายงาน OK/FAIL ของ dependency และ CUDA/GPU status</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิดไฟล์ log แล้วดูว่ามี All checked imports passed หรือไม่มี error</p></div>
+    <div><strong>seed behavior</strong><p>ไม่มี seed ที่ส่งต่อ ใช้ตรวจ environment เท่านั้น</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>01_check_environment.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 00_check_environment.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 00_check_environment.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_01_check_environment_*.status.md
+ls -lh logs/*_01_check_environment_*.stdout.log
+ls -lh logs/*_01_check_environment_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="B-Data-acquisition"><h2>B. Data acquisition</h2>
+<article class="step" id="step-01">
+  <div class="step-head"><span class="badge">Step 01</span><h3>01_fetch_g4ldb.py</h3></div>
+  <p class="subtitle">Fetch G4LDB ligand metadata/activity records</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ดาวน์โหลด/รวบรวม G4LDB ligand metadata และ activity records เพื่อใช้เป็น positive class</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>ไฟล์ข้อมูลดิบ/ML-ready ใต้ data/g4ldb/</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ stdout/status ว่า step PASS และมี output CSV/JSON ตามที่ script ดั้งเดิมกำหนด</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>02_fetch_g4ldb.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 01_fetch_g4ldb.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 01_fetch_g4ldb.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_02_fetch_g4ldb_*.status.md
+ls -lh logs/*_02_fetch_g4ldb_*.stdout.log
+ls -lh logs/*_02_fetch_g4ldb_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="C-Data-preprocessing"><h2>C. Data preprocessing</h2>
+<article class="step" id="step-02">
+  <div class="step-head"><span class="badge">Step 02</span><h3>02_preprocess_g4ldb_ml_ready.py</h3></div>
+  <p class="subtitle">Preprocess G4LDB positives into ML-ready table</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ทำความสะอาด positive ligands: canonical SMILES, descriptor เบื้องต้น, duplicate audit และ metadata report</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>cleaned G4LDB positive ligand table และ report ไฟล์ removed/missing metadata</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิด summary/report ว่าจำนวน compound หลัง clean สมเหตุสมผล</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>03_preprocess_g4ldb_ml_ready.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 02_preprocess_g4ldb_ml_ready.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 02_preprocess_g4ldb_ml_ready.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_03_preprocess_g4ldb_ml_ready_*.status.md
+ls -lh logs/*_03_preprocess_g4ldb_ml_ready_*.stdout.log
+ls -lh logs/*_03_preprocess_g4ldb_ml_ready_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-03">
+  <div class="step-head"><span class="badge">Step 03</span><h3>03_prepare_chembl_negative_decoys.py</h3></div>
+  <p class="subtitle">Prepare ChEMBL assumed-negative decoys and combined binary dataset</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>เตรียม ChEMBL assumed-negative decoys และรวมกับ G4LDB positives เป็น binary dataset</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>combined binary dataset, decoy metadata, similarity-filter report</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจว่า positive/negative balance และไม่มี canonical SMILES overlap ที่ชัดเจน</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>04_prepare_chembl_negative_decoys.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 03_prepare_chembl_negative_decoys.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 03_prepare_chembl_negative_decoys.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_04_prepare_chembl_negative_decoys_*.status.md
+ls -lh logs/*_04_prepare_chembl_negative_decoys_*.stdout.log
+ls -lh logs/*_04_prepare_chembl_negative_decoys_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="D-Dataset-QC-figures"><h2>D. Dataset QC figures</h2>
+<article class="step" id="step-04">
+  <div class="step-head"><span class="badge">Step 04</span><h3>04_visualize_binary_dataset.py</h3></div>
+  <p class="subtitle">Visualize/validate binary G4LDB vs ChEMBL dataset</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ทำ visualization และ QC ของ binary dataset ก่อน modeling</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>PNG/summary ของ dataset distribution และ decoy validation</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิดรูป/summary ดู class balance และ property distribution</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>05_visualize_binary_dataset.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 04_visualize_binary_dataset.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 04_visualize_binary_dataset.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_05_visualize_binary_dataset_*.status.md
+ls -lh logs/*_05_visualize_binary_dataset_*.stdout.log
+ls -lh logs/*_05_visualize_binary_dataset_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-05">
+  <div class="step-head"><span class="badge">Step 05</span><h3>05_plot_physicochemical_boxplots.py</h3></div>
+  <p class="subtitle">Generate physicochemical boxplots/statistics</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง boxplots เปรียบเทียบ physicochemical properties ระหว่าง positive/negative</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>boxplot PNG, statistics CSV, markdown summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจว่ารูปถูกสร้างและค่า summary อ่านได้</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed เช่น --seed 42</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>06_plot_physicochemical_boxplots.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 05_plot_physicochemical_boxplots.py --seed 42</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 05_plot_physicochemical_boxplots.py --seed 7</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_06_plot_physicochemical_boxplots_*.status.md
+ls -lh logs/*_06_plot_physicochemical_boxplots_*.stdout.log
+ls -lh logs/*_06_plot_physicochemical_boxplots_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="E-Classical-ML-baseline"><h2>E. Classical ML baseline</h2>
+<article class="step" id="step-06">
+  <div class="step-head"><span class="badge">Step 06</span><h3>06_train_baseline_g4_classifier.py</h3></div>
+  <p class="subtitle">Train classical ML baseline models</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ฝึก classical ML baseline เช่น Morgan fingerprint + RF/boosting เพื่อเป็น baseline เปรียบเทียบ deep learning</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>model files, metrics, baseline summary ใต้ data/modeling/baseline_training</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ metrics และ saved model/checkpoint</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed เช่น --seed 42</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>07_train_baseline_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 06_train_baseline_g4_classifier.py --seed 42</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 06_train_baseline_g4_classifier.py --seed 7</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_07_train_baseline_g4_classifier_*.status.md
+ls -lh logs/*_07_train_baseline_g4_classifier_*.stdout.log
+ls -lh logs/*_07_train_baseline_g4_classifier_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-07">
+  <div class="step-head"><span class="badge">Step 07</span><h3>07_validate_baseline_g4_classifier.py</h3></div>
+  <p class="subtitle">Validate Morgan RF classical baseline with random/scaffold repeated splits</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ประเมิน Morgan RF baseline ด้วย random/scaffold split และ repeated seeds ที่ปรับได้</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>baseline validation metrics, repeated split summary, feature/bit analysis</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ baseline_repeated_split_summary.csv ว่ามี random และ scaffold ตาม seeds ที่สั่ง</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed/--primary-seed และ --seeds หรือ --n-seeds สำหรับ repeated random/scaffold split</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>08_validate_baseline_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 07_validate_baseline_g4_classifier.py --seed 42 --seeds 0-19</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 07_validate_baseline_g4_classifier.py --seed 42 --n-seeds 5
+python 07_validate_baseline_g4_classifier.py --seed 42 --seeds 0 1 7 11 19
+python 07_validate_baseline_g4_classifier.py --seed 42 --seeds 0-4 --extra-args &quot;--cpu&quot;</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_08_validate_baseline_g4_classifier_*.status.md
+ls -lh logs/*_08_validate_baseline_g4_classifier_*.stdout.log
+ls -lh logs/*_08_validate_baseline_g4_classifier_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="F-Deep-learning-models"><h2>F. Deep learning models</h2>
+<article class="step" id="step-08">
+  <div class="step-head"><span class="badge">Step 08</span><h3>08_train_mlp_morgan_g4_classifier.py</h3></div>
+  <p class="subtitle">Train Morgan-fingerprint MLP deep-learning baseline</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ฝึก MLP บน Morgan fingerprints เป็น neural baseline ที่ยังใช้ fixed molecular fingerprint</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>MLP metrics/checkpoints/summary สำหรับ random และ scaffold</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ summary ว่ามี primary seed และ repeated seeds ตามที่สั่ง</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed/--primary-seed และ --seeds หรือ --n-seeds สำหรับ repeated random/scaffold split</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>09_train_mlp_morgan_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 08_train_mlp_morgan_g4_classifier.py --seed 42 --seeds 0-19</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 08_train_mlp_morgan_g4_classifier.py --seed 42 --n-seeds 5
+python 08_train_mlp_morgan_g4_classifier.py --seed 42 --seeds 0 1 7 11 19
+python 08_train_mlp_morgan_g4_classifier.py --seed 42 --seeds 0-4 --extra-args &quot;--cpu&quot;</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_09_train_mlp_morgan_g4_classifier_*.status.md
+ls -lh logs/*_09_train_mlp_morgan_g4_classifier_*.stdout.log
+ls -lh logs/*_09_train_mlp_morgan_g4_classifier_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-09">
+  <div class="step-head"><span class="badge">Step 09</span><h3>09_train_smiles_sequence_g4_classifier.py</h3></div>
+  <p class="subtitle">Train SMILES CNN-BiGRU sequence model</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ฝึก sequence model บน SMILES เพื่อทดสอบ representation จาก sequence/token ของ molecule</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>SMILES CNN-BiGRU metrics/checkpoints/summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ repeated split summary และดูว่ารันครบ random/scaffold</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed/--primary-seed และ --seeds หรือ --n-seeds สำหรับ repeated random/scaffold split</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>10_train_smiles_sequence_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 09_train_smiles_sequence_g4_classifier.py --seed 42 --seeds 0-19</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 09_train_smiles_sequence_g4_classifier.py --seed 42 --n-seeds 5
+python 09_train_smiles_sequence_g4_classifier.py --seed 42 --seeds 0 1 7 11 19
+python 09_train_smiles_sequence_g4_classifier.py --seed 42 --seeds 0-4 --extra-args &quot;--cpu&quot;</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_10_train_smiles_sequence_g4_classifier_*.status.md
+ls -lh logs/*_10_train_smiles_sequence_g4_classifier_*.stdout.log
+ls -lh logs/*_10_train_smiles_sequence_g4_classifier_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-10">
+  <div class="step-head"><span class="badge">Step 10</span><h3>10_train_chemberta_g4_classifier.py</h3></div>
+  <p class="subtitle">Fine-tune ChemBERTa chemical language model</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>fine-tune pretrained chemical language model ChemBERTa เป็น comparator</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>ChemBERTa metrics/checkpoints/summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ GPU memory/runtime และ metrics summary</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed/--primary-seed และ --seeds หรือ --n-seeds สำหรับ repeated random/scaffold split</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>11_train_chemberta_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 10_train_chemberta_g4_classifier.py --seed 42 --seeds 0-19</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 10_train_chemberta_g4_classifier.py --seed 42 --n-seeds 5
+python 10_train_chemberta_g4_classifier.py --seed 42 --seeds 0 1 7 11 19
+python 10_train_chemberta_g4_classifier.py --seed 42 --seeds 0-4 --extra-args &quot;--cpu&quot;</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_11_train_chemberta_g4_classifier_*.status.md
+ls -lh logs/*_11_train_chemberta_g4_classifier_*.stdout.log
+ls -lh logs/*_11_train_chemberta_g4_classifier_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-11">
+  <div class="step-head"><span class="badge">Step 11</span><h3>11_train_gnn_molecular_graph_g4_classifier.py</h3></div>
+  <p class="subtitle">Train molecular graph GNN model</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ฝึก molecular graph GNN เพื่อเรียน topology ของโมเลกุลโดยตรง เป็น candidate model หลัก</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>GNN checkpoint, metrics, repeated seed summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ scaffold split repeated performance และ checkpoint path</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed/--primary-seed และ --seeds หรือ --n-seeds สำหรับ repeated random/scaffold split</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>12_train_gnn_molecular_graph_g4_classifier.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --seeds 0-19</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --n-seeds 5
+python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --seeds 0 1 7 11 19
+python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --seeds 0-4 --extra-args &quot;--cpu&quot;</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_12_train_gnn_molecular_graph_g4_classifier_*.status.md
+ls -lh logs/*_12_train_gnn_molecular_graph_g4_classifier_*.stdout.log
+ls -lh logs/*_12_train_gnn_molecular_graph_g4_classifier_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="G-Model-comparison"><h2>G. Model comparison</h2>
+<article class="step" id="step-12">
+  <div class="step-head"><span class="badge">Step 12</span><h3>12_build_final_model_comparison_table.py</h3></div>
+  <p class="subtitle">Build final model-comparison tables/figures</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>รวมผล Classical ML และ Deep Learning เข้า final comparison table/figures</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>final_model_comparison CSV/Markdown/figures</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจว่ามีทุก model และทั้ง random/scaffold</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>13_build_final_model_comparison_table.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 12_build_final_model_comparison_table.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 12_build_final_model_comparison_table.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_13_build_final_model_comparison_table_*.status.md
+ls -lh logs/*_13_build_final_model_comparison_table_*.stdout.log
+ls -lh logs/*_13_build_final_model_comparison_table_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="H-Figures/reporting"><h2>H. Figures/reporting</h2>
+<article class="step" id="step-13">
+  <div class="step-head"><span class="badge">Step 13</span><h3>13_make_research_summary_figures.py</h3></div>
+  <p class="subtitle">Create research-summary workflow/overview figures</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้างภาพสรุป project overview และ candidate discovery workflow</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>research-summary PNG figures</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิดไฟล์ PNG ตรวจความสมบูรณ์</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>14_make_research_summary_figures.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 13_make_research_summary_figures.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 13_make_research_summary_figures.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_14_make_research_summary_figures_*.status.md
+ls -lh logs/*_14_make_research_summary_figures_*.stdout.log
+ls -lh logs/*_14_make_research_summary_figures_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-14">
+  <div class="step-head"><span class="badge">Step 14</span><h3>14_make_q1_key_result_figure.py</h3></div>
+  <p class="subtitle">Create Q1-style key-result figure</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง key result figure สำหรับใช้ใน manuscript/presentation</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>Q1 key result PNG/PDF</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิด PNG/PDF ดู layout และ labels</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>15_make_q1_key_result_figure.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 14_make_q1_key_result_figure.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 14_make_q1_key_result_figure.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_15_make_q1_key_result_figure_*.status.md
+ls -lh logs/*_15_make_q1_key_result_figure_*.stdout.log
+ls -lh logs/*_15_make_q1_key_result_figure_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-15">
+  <div class="step-head"><span class="badge">Step 15</span><h3>15_make_q1_workflow_figure.py</h3></div>
+  <p class="subtitle">Create Q1-style workflow figure</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง workflow figure แบบ manuscript-ready</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>Q1 workflow PNG/PDF</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิด PNG/PDF ตรวจลำดับ workflow</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>16_make_q1_workflow_figure.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 15_make_q1_workflow_figure.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 15_make_q1_workflow_figure.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_16_make_q1_workflow_figure_*.status.md
+ls -lh logs/*_16_make_q1_workflow_figure_*.stdout.log
+ls -lh logs/*_16_make_q1_workflow_figure_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="I-BindingDB-external-validation"><h2>I. BindingDB external validation</h2>
+<article class="step" id="step-16">
+  <div class="step-head"><span class="badge">Step 16</span><h3>16_prepare_bindingdb_kd_release.py</h3></div>
+  <p class="subtitle">Prepare slim BindingDB Kd-only external-validation file</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>เตรียม BindingDB Kd-only slim file จาก official release เพื่อ external/broad bioactivity benchmark</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>slim BindingDB Kd TSV</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ input release zip/path และ output row count</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>17_prepare_bindingdb_kd_release.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 16_prepare_bindingdb_kd_release.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 16_prepare_bindingdb_kd_release.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_17_prepare_bindingdb_kd_release_*.status.md
+ls -lh logs/*_17_prepare_bindingdb_kd_release_*.stdout.log
+ls -lh logs/*_17_prepare_bindingdb_kd_release_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-17">
+  <div class="step-head"><span class="badge">Step 17</span><h3>17_validate_bindingdb_kd_gnn_external.py</h3></div>
+  <p class="subtitle">Run BindingDB Kd-only locked-GNN external validation</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ใช้ locked GNN ทำนาย BindingDB Kd-only external set โดยไม่ retrain</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>BindingDB prediction/metrics/similarity outputs</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจว่าใช้ checkpoint ที่ lock แล้ว และไม่มี retraining</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>18_validate_bindingdb_kd_gnn_external.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 17_validate_bindingdb_kd_gnn_external.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 17_validate_bindingdb_kd_gnn_external.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_18_validate_bindingdb_kd_gnn_external_*.status.md
+ls -lh logs/*_18_validate_bindingdb_kd_gnn_external_*.stdout.log
+ls -lh logs/*_18_validate_bindingdb_kd_gnn_external_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-18">
+  <div class="step-head"><span class="badge">Step 18</span><h3>18_validate_bindingdb_g4_known_inhibitors.py</h3></div>
+  <p class="subtitle">Run BindingDB known-G4 positive-control validation</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ประเมิน known G4 binder/inhibitor records เป็น positive-control support</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>known-G4 predictions/summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ traceability ของ BindingDB rows และ summary</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>19_validate_bindingdb_g4_known_inhibitors.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 18_validate_bindingdb_g4_known_inhibitors.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 18_validate_bindingdb_g4_known_inhibitors.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_19_validate_bindingdb_g4_known_inhibitors_*.status.md
+ls -lh logs/*_19_validate_bindingdb_g4_known_inhibitors_*.stdout.log
+ls -lh logs/*_19_validate_bindingdb_g4_known_inhibitors_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-19">
+  <div class="step-head"><span class="badge">Step 19</span><h3>19_run_bindingdb_supplementary_positive_control.py</h3></div>
+  <p class="subtitle">Build supplementary BindingDB positive-control support analysis</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>รวม BindingDB support analyses เป็น supplementary positive-control evidence</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>supplementary BindingDB tables/summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจว่า exact overlap/near analog/known G4 evidence แยกกันชัดเจน</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>20_run_bindingdb_supplementary_positive_control.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 19_run_bindingdb_supplementary_positive_control.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 19_run_bindingdb_supplementary_positive_control.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_20_run_bindingdb_supplementary_positive_control_*.status.md
+ls -lh logs/*_20_run_bindingdb_supplementary_positive_control_*.stdout.log
+ls -lh logs/*_20_run_bindingdb_supplementary_positive_control_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="J-PubChem-external-validation"><h2>J. PubChem external validation</h2>
+<article class="step" id="step-20">
+  <div class="step-head"><span class="badge">Step 20</span><h3>20_collect_pubchem_g4_bioassay_aids.py</h3></div>
+  <p class="subtitle">Collect candidate PubChem G4 BioAssay AIDs</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ค้นหาและ curate candidate PubChem BioAssay AIDs ที่เกี่ยวกับ G4</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>candidate/selected AID tables และ checkpoint metadata</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ selected AIDs และ active/inactive counts</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>21_collect_pubchem_g4_bioassay_aids.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 20_collect_pubchem_g4_bioassay_aids.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 20_collect_pubchem_g4_bioassay_aids.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_21_collect_pubchem_g4_bioassay_aids_*.status.md
+ls -lh logs/*_21_collect_pubchem_g4_bioassay_aids_*.stdout.log
+ls -lh logs/*_21_collect_pubchem_g4_bioassay_aids_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-21">
+  <div class="step-head"><span class="badge">Step 21</span><h3>21_collect_pubchem_g4_compound_level_records.py</h3></div>
+  <p class="subtitle">Collect PubChem compound-level G4 assay records</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ดึง compound-level PubChem assay records สำหรับ external validation</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>compound-level assay records, overlap/similarity audit</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจจำนวน compounds และ no-training-overlap filtering</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>22_collect_pubchem_g4_compound_level_records.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 21_collect_pubchem_g4_compound_level_records.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 21_collect_pubchem_g4_compound_level_records.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_22_collect_pubchem_g4_compound_level_records_*.status.md
+ls -lh logs/*_22_collect_pubchem_g4_compound_level_records_*.stdout.log
+ls -lh logs/*_22_collect_pubchem_g4_compound_level_records_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-22">
+  <div class="step-head"><span class="badge">Step 22</span><h3>22_collect_pubchem_g4_expanded_external_evidence_set.py</h3></div>
+  <p class="subtitle">Build expanded PubChem G4 evidence set</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง expanded PubChem-derived G4 evidence set แบบ traceable</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>expanded evidence CSV และ strict no-training-overlap set</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ tier/evidence labels และ background set size</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>23_collect_pubchem_g4_expanded_external_evidence_set.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 22_collect_pubchem_g4_expanded_external_evidence_set.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 22_collect_pubchem_g4_expanded_external_evidence_set.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_23_collect_pubchem_g4_expanded_external_evidence_set_*.status.md
+ls -lh logs/*_23_collect_pubchem_g4_expanded_external_evidence_set_*.stdout.log
+ls -lh logs/*_23_collect_pubchem_g4_expanded_external_evidence_set_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-23">
+  <div class="step-head"><span class="badge">Step 23</span><h3>23_validate_pubchem_g4_expanded_locked_gnn.py</h3></div>
+  <p class="subtitle">Run locked GNN on expanded PubChem G4 evidence set</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>ใช้ locked GNN predict expanded PubChem evidence set โดยไม่ tune threshold</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>locked-GNN PubChem predictions</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ prediction CSV และ checkpoint ที่ใช้</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>24_validate_pubchem_g4_expanded_locked_gnn.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 23_validate_pubchem_g4_expanded_locked_gnn.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 23_validate_pubchem_g4_expanded_locked_gnn.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_24_validate_pubchem_g4_expanded_locked_gnn_*.status.md
+ls -lh logs/*_24_validate_pubchem_g4_expanded_locked_gnn_*.stdout.log
+ls -lh logs/*_24_validate_pubchem_g4_expanded_locked_gnn_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-24">
+  <div class="step-head"><span class="badge">Step 24</span><h3>24_analyze_pubchem_g4_locked_gnn_imbalance.py</h3></div>
+  <p class="subtitle">Run imbalance-aware PubChem locked-GNN analysis</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>วิเคราะห์ผล PubChem โดยคำนึงถึง class imbalance / enrichment</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>imbalance-aware metrics/plots/summary</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>ตรวจ enrichment/statistical summary และ seed ที่ใช้</p></div>
+    <div><strong>seed behavior</strong><p>รองรับ --seed เช่น --seed 42</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>25_analyze_pubchem_g4_locked_gnn_imbalance.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 24_analyze_pubchem_g4_locked_gnn_imbalance.py --seed 42</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 24_analyze_pubchem_g4_locked_gnn_imbalance.py --seed 7</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_25_analyze_pubchem_g4_locked_gnn_imbalance_*.status.md
+ls -lh logs/*_25_analyze_pubchem_g4_locked_gnn_imbalance_*.stdout.log
+ls -lh logs/*_25_analyze_pubchem_g4_locked_gnn_imbalance_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="H-Figures/reporting"><h2>H. Figures/reporting</h2>
+<article class="step" id="step-25">
+  <div class="step-head"><span class="badge">Step 25</span><h3>25_make_integrated_workflow_figure.py</h3></div>
+  <p class="subtitle">Create integrated workflow figure</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง integrated workflow figure รวม internal + external validation</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>integrated workflow PNG</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิดรูปและตรวจ flow</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>26_make_integrated_workflow_figure.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 25_make_integrated_workflow_figure.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 25_make_integrated_workflow_figure.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_26_make_integrated_workflow_figure_*.status.md
+ls -lh logs/*_26_make_integrated_workflow_figure_*.stdout.log
+ls -lh logs/*_26_make_integrated_workflow_figure_*.stderr.log</code></pre>
+</article>
+</section><section class="phase" id="K-Final-reports"><h2>K. Final reports</h2>
+<article class="step" id="step-26">
+  <div class="step-head"><span class="badge">Step 26</span><h3>26_build_master_report_html.py</h3></div>
+  <p class="subtitle">Build standalone master HTML report</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง master HTML report รวมผลหลักของโปรเจกต์</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>MASTER_REPORT_NIPAH_G4_*.html</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิด HTML ตรวจรูปและตาราง</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>27_build_master_report_html.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 26_build_master_report_html.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 26_build_master_report_html.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_27_build_master_report_html_*.status.md
+ls -lh logs/*_27_build_master_report_html_*.stdout.log
+ls -lh logs/*_27_build_master_report_html_*.stderr.log</code></pre>
+</article>
+
+<article class="step" id="step-27">
+  <div class="step-head"><span class="badge">Step 27</span><h3>27_build_reproducibility_workflow_html.py</h3></div>
+  <p class="subtitle">Build original full reproducibility-workflow HTML report</p>
+  <div class="grid">
+    <div><strong>ทำไปเพื่ออะไร</strong><p>สร้าง original full reproducibility workflow HTML report</p></div>
+    <div><strong>คาดว่าจะได้อะไร</strong><p>NIPAH_G4_REPRODUCIBILITY_WORKFLOW_FULL_*.html</p></div>
+    <div><strong>ตรวจผลอย่างไร</strong><p>เปิด HTML ตรวจความครบถ้วน</p></div>
+    <div><strong>seed behavior</strong><p>original step ไม่มี seed option; wrapper จะ log seed option แต่ไม่ส่งต่อ</p></div>
+  </div>
+  <p><strong>Embedded source:</strong> <code>28_build_reproducibility_workflow_html.py</code> <span class="tag">standalone v.4</span></p>
+  <h4>คำสั่งแนะนำสำหรับ reproduce หลัก</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 27_build_reproducibility_workflow_html.py</code></pre>
+  <h4>คำสั่งทดสอบแบบเร็ว / ปรับใช้</h4>
+  <pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 27_build_reproducibility_workflow_html.py --dry-run</code></pre>
+  <h4>หลังรัน ให้ตรวจไฟล์ log/status</h4>
+  <pre><code>ls -lh logs/*_28_build_reproducibility_workflow_html_*.status.md
+ls -lh logs/*_28_build_reproducibility_workflow_html_*.stdout.log
+ls -lh logs/*_28_build_reproducibility_workflow_html_*.stderr.log</code></pre>
+</article>
+</section>
+
+<section class="card">
+<h2>Appendix: คำสั่งรวมแบบแยกตามเป้าหมาย</h2>
+<h3>รันเฉพาะ modeling core: Classical + Deep Learning + final comparison</h3>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 06_train_baseline_g4_classifier.py --seed 42
+python 07_validate_baseline_g4_classifier.py --seed 42 --seeds 0-19
+python 08_train_mlp_morgan_g4_classifier.py --seed 42 --seeds 0-19
+python 09_train_smiles_sequence_g4_classifier.py --seed 42 --seeds 0-19
+python 10_train_chemberta_g4_classifier.py --seed 42 --seeds 0-19
+python 11_train_gnn_molecular_graph_g4_classifier.py --seed 42 --seeds 0-19
+python 12_build_final_model_comparison_table.py</code></pre>
+<h3>รันเฉพาะ external validation หลังมี locked GNN แล้ว</h3>
+<pre><button class="copy" onclick="copyCode(this)">copy</button><code>python 16_prepare_bindingdb_kd_release.py
+python 17_validate_bindingdb_kd_gnn_external.py
+python 18_validate_bindingdb_g4_known_inhibitors.py
+python 19_run_bindingdb_supplementary_positive_control.py
+python 20_collect_pubchem_g4_bioassay_aids.py
+python 21_collect_pubchem_g4_compound_level_records.py
+python 22_collect_pubchem_g4_expanded_external_evidence_set.py
+python 23_validate_pubchem_g4_expanded_locked_gnn.py
+python 24_analyze_pubchem_g4_locked_gnn_imbalance.py --seed 42</code></pre>
+</section>
+
+</main>
+<footer>
+<p>Generated by Hermes/Luke for ลูกเต้ย. This handout is intended as a practical command-by-command reproducibility guide.</p>
+</footer>
+</body>
+</html>
